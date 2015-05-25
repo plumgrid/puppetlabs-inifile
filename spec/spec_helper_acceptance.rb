@@ -1,17 +1,22 @@
 require 'beaker-rspec/spec_helper'
 require 'beaker-rspec/helpers/serverspec'
 
-hosts.each do |host|
-  if host['platform'] =~ /debian/
-    on host, 'echo \'export PATH=/var/lib/gems/1.8/bin/:${PATH}\' >> ~/.bashrc'
-  end
-  if host.is_pe?
-    install_pe
+unless ENV['RS_PROVISION'] == 'no'
+  # This will install the latest available package on el and deb based
+  # systems fail on windows and osx, and install via gem on other *nixes
+  foss_opts = {:default_action => 'gem_install'}
+
+  if default.is_pe?; then
+    install_pe;
   else
-    # Install Puppet
-    install_package host, 'rubygems'
-    on host, 'gem install puppet --no-ri --no-rdoc'
-    on host, "mkdir -p #{host['distmoduledir']}"
+    install_puppet(foss_opts);
+  end
+
+  hosts.each do |host|
+    if host['platform'] =~ /debian/
+      on host, 'echo \'export PATH=/var/lib/gems/1.8/bin/:${PATH}\' >> ~/.bashrc'
+      on host, "mkdir -p #{host['distmoduledir']}"
+    end
   end
 end
 
@@ -25,7 +30,9 @@ RSpec.configure do |c|
   # Configure all nodes in nodeset
   c.before :suite do
     # Install module and dependencies
-    puppet_module_install(:source => proj_root, :module_name => 'inifile')
+    hosts.each do |host|
+      copy_root_module_to(host, :source => proj_root, :module_name => 'inifile')
+    end
   end
 
   c.treat_symbols_as_metadata_keys_with_true_values = true

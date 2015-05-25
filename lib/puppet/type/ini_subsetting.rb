@@ -10,7 +10,9 @@ Puppet::Type.newtype(:ini_subsetting) do
   end
 
   newparam(:section) do
-    desc 'The name of the section in the ini file in which the setting should be defined.'
+    desc 'The name of the section in the ini file in which the setting should be defined.' +
+      'If not provided, defaults to global, top of file, sections.'
+    defaultto("")
   end
 
   newparam(:setting) do
@@ -37,13 +39,19 @@ Puppet::Type.newtype(:ini_subsetting) do
 
   newparam(:key_val_separator) do
     desc 'The separator string to use between each setting name and value. ' +
-        'Defaults to " = ", but you could use this to override e.g. whether ' +
-        'or not the separator should include whitespace.'
+        'Defaults to " = ", but you could use this to override e.g. ": ", or' +
+        'whether or not the separator should include whitespace.'
     defaultto(" = ")
+  end
+
+  newparam(:quote_char) do
+    desc 'The character used to quote the entire value of the setting. ' +
+        %q{Valid values are '', '"' and "'". Defaults to ''.}
+    defaultto('')
 
     validate do |value|
-      unless value.scan('=').size == 1
-        raise Puppet::Error, ":key_val_separator must contain exactly one = character."
+      unless value =~ /^["']?$/
+        raise Puppet::Error, %q{:quote_char valid values are '', '"' and "'"}
       end
     end
   end
