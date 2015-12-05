@@ -7,13 +7,13 @@ module Util
 
     def initialize(path, key_val_separator = ' = ', section_prefix = '[', section_suffix = ']')
 
-      k_v_s = key_val_separator.strip
+      k_v_s = key_val_separator =~ /^\s+$/ ? ' ' : key_val_separator.strip
 
       @section_prefix = section_prefix
       @section_suffix = section_suffix
 
       @@SECTION_REGEX = section_regex
-      @@SETTING_REGEX = /^(\s*)([^#;\s]|[^#;\s].*?[^\s#{k_v_s}])(\s*#{k_v_s}\s*)(.*)\s*$/
+      @@SETTING_REGEX = /^(\s*)([^#;\s]|[^#;\s].*?[^\s#{k_v_s}])(\s*#{k_v_s}[ \t]*)(.*)\s*$/
       @@COMMENTED_SETTING_REGEX = /^(\s*)[#;]+(\s*)(.*?[^\s#{k_v_s}])(\s*#{k_v_s}[ \t]*)(.*)\s*$/
 
       @path = path
